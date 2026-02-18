@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title id="page-title">Menú Digital</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --p: #E8572A; --s: #1A1A2E; --bg: #FAFAF7;
+  --card: #FFFFFF; --text: #1A1A2E; --muted: #8A8A9A;
+  --border: #EBEBEB; --strike: #CCCCCC;
+  --r: 18px; --pill: 100px;
+  --sh: 0 2px 16px rgba(0,0,0,0.07);
+  --sh2: 0 8px 40px rgba(0,0,0,0.13);
+  --t: 0.22s cubic-bezier(.4,0,.2,1);
+  --hh: 68px;
+  --fd: 'Cormorant Garamond', Georgia, serif;
+  --fb: 'Outfit', system-ui, sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--fb);background:var(--bg);color:var(--text);min-height:100vh}
+
+/* LOADING */
+#loading{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+.ld-icon{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--p),#ff8c5a);display:flex;align-items:center;justify-content:center;font-size:28px;animation:rock 1.8s ease-in-out infinite;box-shadow:0 4px 20px rgba(232,87,42,.35)}
+@keyframes rock{0%,100%{transform:rotate(-10deg) scale(1)}50%{transform:rotate(10deg) scale(1.08)}}
+.ld-txt{font-family:var(--fd);font-size:20px;color:var(--muted)}
+.ld-bar{width:120px;height:3px;background:var(--border);border-radius:4px;overflow:hidden}
+.ld-bar::after{content:'';display:block;height:100%;background:var(--p);border-radius:4px;animation:prog 1.4s ease-in-out infinite}
+@keyframes prog{0%{width:0%;margin-left:0}50%{width:70%;margin-left:15%}100%{width:0%;margin-left:100%}}
+
+/* ERROR */
+#error{display:none;position:fixed;inset:0;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;gap:14px}
+#error .ei{font-size:52px}
+#error h2{font-family:var(--fd);font-size:24px;color:var(--s)}
+#error p{color:var(--muted);font-size:15px;max-width:300px;line-height:1.6}
+#error button{margin-top:6px;padding:12px 32px;background:var(--p);color:#fff;border:none;border-radius:var(--pill);font-family:var(--fb);font-size:15px;font-weight:600;cursor:pointer;transition:opacity var(--t)}
+#error button:hover{opacity:.85}
+
+/* APP */
+#app{display:none;opacity:0;transition:opacity .5s ease}
+#app.visible{opacity:1}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:100;height:var(--hh);background:rgba(255,255,255,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px}
+.h-logo{width:42px;height:42px;border-radius:10px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,var(--p),#ff8c5a);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 10px rgba(232,87,42,.3)}
+.h-logo img{width:100%;height:100%;object-fit:cover}
+.h-info{flex:1;min-width:0}
+.h-name{font-family:var(--fd);font-size:20px;font-weight:700;color:var(--s);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h-slogan{font-size:11px;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.02em}
+.btn-wa{display:flex;align-items:center;gap:6px;background:#25D366;color:#fff;padding:8px 14px;border-radius:var(--pill);text-decoration:none;font-size:13px;font-weight:600;flex-shrink:0;box-shadow:0 3px 12px rgba(37,211,102,.3);transition:transform var(--t),box-shadow var(--t)}
+.btn-wa:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(37,211,102,.4)}
+.btn-wa svg{width:16px;height:16px}
+.btn-wa span{display:none}
+@media(min-width:420px){.btn-wa span{display:inline}}
+
+/* BANNER */
+#banner{display:none;background:linear-gradient(90deg,#FFF8E1,#FFE57F);border-bottom:1px solid #FFD54F;padding:9px 16px;text-align:center;font-size:13px;font-weight:500;color:#6D4C00}
+#banner.on{display:block}
+#banner::before{content:'🔔  '}
+
+/* CATEGORÍAS */
+#cat-wrap{position:sticky;top:var(--hh);z-index:90;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 0}
+#cats{display:flex;gap:8px;padding:2px 16px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#cats::-webkit-scrollbar{display:none}
+.cb{flex-shrink:0;padding:7px 18px;min-height:36px;border-radius:var(--pill);border:1.5px solid var(--border);background:var(--card);color:var(--text);font-family:var(--fb);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all var(--t);-webkit-tap-highlight-color:transparent}
+.cb:hover{border-color:var(--p);color:var(--p)}
+.cb.active{background:var(--p);border-color:var(--p);color:#fff;box-shadow:0 3px 12px rgba(232,87,42,.3);font-weight:600}
+
+/* MAIN */
+main{max-width:1200px;margin:0 auto;padding:28px 16px 60px}
+
+/* SECCIÓN */
+.sec{margin-bottom:44px}
+.sec-title{font-family:var(--fd);font-size:28px;font-weight:700;color:var(--s);margin-bottom:18px;display:flex;align-items:center;gap:10px;letter-spacing:.01em}
+.sec-title::before{content:'';width:4px;height:26px;background:var(--p);border-radius:3px;flex-shrink:0}
+.sec-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:560px){.grid{grid-template-columns:repeat(2,1fr);gap:16px}}
+@media(min-width:1024px){.grid{grid-template-columns:repeat(3,1fr);gap:20px}}
+
+/* CARD */
+.card{background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);transition:transform var(--t),box-shadow var(--t);border:1px solid var(--border)}
+.card:hover{transform:translateY(-4px);box-shadow:var(--sh2)}
+.card-img{position:relative;padding-top:58%;overflow:hidden;background:#F0EDE8}
+.card-img img,.no-img{position:absolute;inset:0;width:100%;height:100%}
+.card-img img{object-fit:cover;transition:transform .5s ease}
+.card:hover .card-img img{transform:scale(1.05)}
+.no-img{display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#F5F2EE,#EDE9E3);color:#C8C4BE;font-size:32px;gap:4px}
+.no-img small{font-size:10px;font-family:var(--fb);text-transform:uppercase;letter-spacing:.08em}
+.skel{position:absolute;inset:0;background:linear-gradient(90deg,#F0EDE8 25%,#E8E4DF 50%,#F0EDE8 75%);background-size:200% 100%;animation:sk 1.5s infinite}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.badge{position:absolute;top:10px;right:10px;background:var(--p);color:#fff;font-size:10px;font-weight:700;padding:4px 10px;border-radius:var(--pill);text-transform:uppercase;letter-spacing:.06em;box-shadow:0 2px 10px rgba(232,87,42,.4)}
+.card-info{padding:14px 16px 16px}
+.card-name{font-family:var(--fd);font-size:18px;font-weight:700;color:var(--s);line-height:1.25;margin-bottom:5px}
+.card-desc{font-size:13px;color:var(--muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:11px;font-weight:300}
+.price-row{display:flex;align-items:baseline;gap:8px;margin-bottom:9px}
+.price-now{font-size:22px;font-weight:700;color:var(--p);line-height:1}
+.price-old{font-size:14px;color:var(--strike);text-decoration:line-through}
+.tag{display:inline-flex;align-items:center;gap:3px;border:1.5px solid var(--border);border-radius:var(--pill);padding:3px 10px;font-size:11px;font-weight:500;color:var(--muted);background:var(--bg)}
+
+/* EMPTY */
+.empty{text-align:center;padding:64px 24px;color:var(--muted)}
+.empty .ei{font-size:48px;margin-bottom:12px}
+.empty p{font-size:16px;line-height:1.6}
+
+/* FOOTER */
+footer{background:var(--s);color:rgba(255,255,255,.7);padding:36px 16px 28px;text-align:center}
+.ft-name{font-family:var(--fd);font-size:22px;font-weight:700;color:#fff;margin-bottom:6px}
+.ft-addr{font-size:13px;margin-bottom:18px;line-height:1.5}
+.ft-links{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.ft-link{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.8);text-decoration:none;font-size:13px;font-weight:500;padding:8px 16px;border-radius:var(--pill);border:1px solid rgba(255,255,255,.18);transition:all var(--t)}
+.ft-link:hover{background:rgba(255,255,255,.1);color:#fff}
+.ft-link svg{width:15px;height:15px}
+.ft-legal{font-size:11px;color:rgba(255,255,255,.3)}
+
+/* FAB */
+#fab{display:none;position:fixed;bottom:20px;right:16px;z-index:200;width:54px;height:54px;border-radius:50%;background:#25D366;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 20px rgba(37,211,102,.5);transition:transform var(--t)}
+#fab.on{display:flex}
+#fab:hover{transform:scale(1.1)}
+#fab svg{width:26px;height:26px;fill:#fff}
+
+/* ANIMACION */
+.fi{animation:fi .4s ease both}
+@keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="ld-icon">🍽️</div>
+  <p class="ld-txt">Preparando tu menú...</p>
+  <div class="ld-bar"></div>
+</div>
+
+<div id="error">
+  <div class="ei">⚠️</div>
+  <h2>Menú no disponible</h2>
+  <p>Estamos teniendo problemas técnicos. Intenta en unos minutos o pide ayuda a tu mesero.</p>
+  <button onclick="location.reload()">Reintentar</button>
+</div>
+
+<div id="app">
+  <header>
+    <div class="h-logo" id="hLogo">🍴</div>
+    <div class="h-info">
+      <div class="h-name" id="hName">Restaurante</div>
+      <div class="h-slogan" id="hSlogan"></div>
+    </div>
+    <a href="#" id="btnWa" class="btn-wa" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.096.546 4.063 1.502 5.774L.057 23.09a.5.5 0 0 0 .6.668l5.5-1.44A11.932 11.932 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-1.903 0-3.68-.51-5.21-1.4l-.373-.22-3.864 1.013 1.033-3.768-.243-.387A9.818 9.818 0 0 1 2.182 12C2.182 6.583 6.583 2.182 12 2.182S21.818 6.583 21.818 12 17.417 21.818 12 21.818z"/></svg>
+      <span>WhatsApp</span>
+    </a>
+  </header>
+
+  <div id="banner"></div>
+  <div id="cat-wrap"><div id="cats"></div></div>
+  <main id="menu"></main>
+
+  <footer>
+    <div class="ft-name" id="ftName"></div>
+    <div class="ft-addr" id="ftAddr"></div>
+    <div class="ft-links" id="ftLinks"></div>
+    <div class="ft-legal">Menú digital · Vitrina Digital</div>
+  </footer>
+</div>
+
+<a href="#" id="fab" target="_blank" rel="noopener" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.096.546 4.063 1.502 5.774L.057 23.09a.5.5 0 0 0 .6.668l5.5-1.44A11.932 11.932 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-1.903 0-3.68-.51-5.21-1.4l-.373-.22-3.864 1.013 1.033-3.768-.243-.387A9.818 9.818 0 0 1 2.182 12C2.182 6.583 6.583 2.182 12 2.182S21.818 6.583 21.818 12 17.417 21.818 12 21.818z"/></svg>
+</a>
+
+<script>
+const SHEET_ID = '1BOLcriyrNzhJvOYprW5dFGYQmzPqNkV3i0YWQGJL4RA';
+const API_KEY  = 'AIzaSyD7aqcJ6sNocq1DG4HjjKHU2J5q0XKB1uI';
+const CACHE_MS = 60 * 1000; // 1 minuto
+const CACHE_KEY = 'vd_' + SHEET_ID;
+
+/* ─── FETCH ─── */
+async function fetchData() {
+  try {
+    const c = localStorage.getItem(CACHE_KEY);
+    if (c) { const {ts,data} = JSON.parse(c); if (Date.now()-ts < CACHE_MS) return data; }
+  } catch(e){}
+
+  const enc = s => encodeURIComponent(s);
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values`;
+  const [r1,r2] = await Promise.all([
+    fetch(`${base}/${enc('Menu!A2:J1000')}?key=${API_KEY}`),
+    fetch(`${base}/${enc('CONFIG_RESTAURANTE!A2:B20')}?key=${API_KEY}`)
+  ]);
+  if (!r1.ok || !r2.ok) throw new Error('HTTP '+r1.status);
+  const [d1,d2] = await Promise.all([r1.json(),r2.json()]);
+  const result = { menu: d1.values||[], config: d2.values||[] };
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(),data:result})); } catch(e){}
+  return result;
+}
+
+/* ─── PARSE CONFIG ───
+   La hoja CONFIG_RESTAURANTE tiene Col A = clave, Col B = valor
+   Ej: ["NOMBRE_RESTAURANTE","Taquería El Güero"]
+*/
+function parseConfig(rows) {
+  const cfg = {};
+  (rows||[]).forEach(row => {
+    if (row && row[0] && row[1] !== undefined)
+      cfg[row[0].trim()] = String(row[1]||'').trim();
+  });
+  return cfg;
+}
+
+/* ─── PARSE MENU ─── */
+function num(v) {
+  // Soporta formatos: $35.000 / $35,000 / 35000 / 35.000,00
+  // En Colombia el separador de miles es punto: 35.000
+  let s = String(v||0).replace(/[$\s]/g,''); // quita $ y espacios
+  // Si tiene punto Y coma: 35.000,50 → decimal con coma
+  if (s.includes('.') && s.includes(',')) s = s.replace(/\./g,'').replace(',','.');
+  // Si solo tiene punto y son exactamente 3 dígitos después: es miles (35.000)
+  else if (s.includes('.') && /\.\d{3}$/.test(s) && !s.includes(',')) s = s.replace(/\./g,'');
+  // Si solo tiene coma: puede ser decimal (3.5) o miles (35,000) - si 3 dígitos después es miles
+  else if (s.includes(',') && /,\d{3}$/.test(s)) s = s.replace(/,/g,'');
+  else if (s.includes(',')) s = s.replace(',','.');
+  return parseFloat(s) || 0;
+}
+function fmtPrice(n) {
+  // Formato colombiano: 35.000
+  return n.toLocaleString('es-CO', {minimumFractionDigits:0, maximumFractionDigits:0});
+}
+function parseMenu(rows) {
+  return (rows||[])
+    .filter(r => {
+      if (!r||r.length<3) return false;
+      const d = (r[7]||'').toUpperCase();
+      return d!=='NO' && d!=='FALSE';
+    })
+    .map(r => ({
+      categoria:  (r[0]||'').trim(),
+      orden:       parseInt(r[1])||999,
+      nombre:     (r[2]||'').trim(),
+      descripcion:(r[3]||'').trim(),
+      precio:      num(r[4]),
+      precioAnt:   r[5]&&String(r[5]).trim() ? num(r[5]) : null,
+      fotoUrl:    (r[6]||'').trim(),
+      destacado:  ['SI','TRUE'].includes((r[8]||'').toUpperCase()),
+      etiqueta:   (r[9]||'').trim()
+    }))
+    .filter(d => d.nombre && d.precio > 0)
+    .sort((a,b) => a.categoria<b.categoria?-1:a.categoria>b.categoria?1:a.orden-b.orden);
+}
+
+/* ─── COLORES ─── */
+function applyColors(cfg) {
+  const r = document.documentElement;
+  if (/^#[0-9a-f]{3,6}$/i.test(cfg.COLOR_PRIMARIO||''))   r.style.setProperty('--p',  cfg.COLOR_PRIMARIO);
+  if (/^#[0-9a-f]{3,6}$/i.test(cfg.COLOR_SECUNDARIO||'')) r.style.setProperty('--s',  cfg.COLOR_SECUNDARIO);
+  if (/^#[0-9a-f]{3,6}$/i.test(cfg.COLOR_FONDO||''))      r.style.setProperty('--bg', cfg.COLOR_FONDO);
+}
+
+/* ─── HEADER ─── */
+function renderHeader(cfg) {
+  const nombre = cfg.NOMBRE_RESTAURANTE || 'Restaurante';
+  document.getElementById('page-title').textContent = nombre;
+  document.getElementById('hName').textContent   = nombre;
+  document.getElementById('hSlogan').textContent = cfg.ESLOGAN || '';
+
+  if (cfg.LOGO_URL)
+    document.getElementById('hLogo').innerHTML =
+      `<img src="${cfg.LOGO_URL}" alt="${h(nombre)}" onerror="this.parentNode.textContent='🍴'">`;
+
+  const wa = (cfg.WHATSAPP||'').replace(/\D/g,'');
+  const bwa = document.getElementById('btnWa');
+  const fab = document.getElementById('fab');
+  if (wa) { const u=`https://wa.me/${wa}`; bwa.href=fab.href=u; fab.classList.add('on'); }
+  else bwa.style.display='none';
+
+  const bn = document.getElementById('banner');
+  if ((cfg.MOSTRAR_BANNER||'').toUpperCase()==='SI' && cfg.MENSAJE_BANNER) {
+    bn.textContent = cfg.MENSAJE_BANNER; bn.classList.add('on');
+  }
+
+  document.getElementById('ftName').textContent = nombre;
+  document.getElementById('ftAddr').textContent = cfg.DIRECCION||'';
+
+  const fl = document.getElementById('ftLinks');
+  fl.innerHTML = '';
+  if (cfg.TELEFONO) fl.innerHTML+=`
+    <a href="tel:${cfg.TELEFONO}" class="ft-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14v2.92z"/></svg>
+      ${cfg.TELEFONO}</a>`;
+  if (wa) fl.innerHTML+=`
+    <a href="https://wa.me/${wa}" target="_blank" rel="noopener" class="ft-link">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.096.546 4.063 1.502 5.774L.057 23.09a.5.5 0 0 0 .6.668l5.5-1.44A11.932 11.932 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-1.903 0-3.68-.51-5.21-1.4l-.373-.22-3.864 1.013 1.033-3.768-.243-.387A9.818 9.818 0 0 1 2.182 12C2.182 6.583 6.583 2.182 12 2.182S21.818 6.583 21.818 12 17.417 21.818 12 21.818z"/></svg>
+      WhatsApp</a>`;
+  if (cfg.INSTAGRAM) {
+    const ig=cfg.INSTAGRAM.replace('@','');
+    fl.innerHTML+=`
+      <a href="https://instagram.com/${ig}" target="_blank" rel="noopener" class="ft-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        @${ig}</a>`;
+  }
+}
+
+/* ─── STATE ─── */
+let activeCat='Todos', allDishes=[], moneda='$';
+
+/* ─── CATEGORÍAS ─── */
+function renderCats(cats) {
+  document.getElementById('cats').innerHTML =
+    ['Todos',...cats].map(c=>`
+      <button class="cb ${c===activeCat?'active':''}" data-cat="${h(c)}"
+              onclick="filterCat('${c.replace(/'/g,"\\'")}')">
+        ${h(c)}</button>`).join('');
+}
+
+/* ─── RENDER MENU ─── */
+function renderMenu(dishes, cat='Todos') {
+  const items = cat==='Todos' ? dishes : dishes.filter(d=>d.categoria===cat);
+  const el = document.getElementById('menu');
+
+  if (!items.length) {
+    el.innerHTML=`<div class="empty"><div class="ei">🍽️</div><p>Nuestro menú se está actualizando.<br>Vuelve pronto.</p></div>`;
+    return;
+  }
+
+  const groups={};
+  items.forEach(d=>{ (groups[d.categoria]=groups[d.categoria]||[]).push(d); });
+
+  el.innerHTML = Object.entries(groups).map(([cat,list],si)=>`
+    <section class="sec fi" style="animation-delay:${si*.07}s">
+      <h2 class="sec-title">${h(cat)}</h2>
+      <div class="grid">${list.map((d,i)=>card(d,si*10+i)).join('')}</div>
+    </section>`).join('');
+
+  lazyImages();
+}
+
+function card(d,idx) {
+  const img = d.fotoUrl
+    ? `<div class="skel"></div><img data-src="${d.fotoUrl}" alt="${h(d.nombre)}" loading="lazy"
+         onload="this.previousSibling.remove()"
+         onerror="this.parentNode.innerHTML='<div class=\\'no-img\\'>🍽️<small>Sin foto</small></div>'">`
+    : `<div class="no-img">🍽️<small>Sin foto</small></div>`;
+
+  return `
+    <div class="card fi" style="animation-delay:${idx*.04}s">
+      <div class="card-img">
+        ${img}
+        ${d.destacado?'<span class="badge">⭐ Recomendado</span>':''}
+      </div>
+      <div class="card-info">
+        <h3 class="card-name">${h(d.nombre)}</h3>
+        ${d.descripcion?`<p class="card-desc">${h(d.descripcion)}</p>`:''}
+        <div class="price-row">
+          <span class="price-now">${moneda}${fmtPrice(d.precio)}</span>
+          ${d.precioAnt?`<span class="price-old">${moneda}${fmtPrice(d.precioAnt)}</span>`:''}
+        </div>
+        ${d.etiqueta?`<span class="tag">${h(d.etiqueta)}</span>`:''}
+      </div>
+    </div>`;
+}
+
+/* ─── FILTRO ─── */
+function filterCat(cat) {
+  activeCat = cat;
+  document.querySelectorAll('.cb').forEach(b=>b.classList.toggle('active',b.dataset.cat===cat));
+  renderMenu(allDishes, cat);
+  document.getElementById('cat-wrap').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ─── LAZY ─── */
+function lazyImages() {
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('img[data-src]').forEach(i=>i.src=i.dataset.src); return;
+  }
+  const obs = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){e.target.src=e.target.dataset.src;obs.unobserve(e.target);} });
+  },{rootMargin:'200px'});
+  document.querySelectorAll('img[data-src]').forEach(i=>obs.observe(i));
+}
+
+/* ─── HELPER ─── */
+function h(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ─── INIT ─── */
+async function init() {
+  try {
+    const {menu:mRows, config:cRows} = await fetchData();
+    const cfg = parseConfig(cRows);
+    allDishes = parseMenu(mRows);
+    moneda    = cfg.MONEDA || '$';
+
+    applyColors(cfg);
+    renderHeader(cfg);
+    const cats = [...new Set(allDishes.map(d=>d.categoria))];
+    renderCats(cats);
+    renderMenu(allDishes);
+
+    document.getElementById('loading').style.display='none';
+    const app = document.getElementById('app');
+    app.style.display='block';
+    requestAnimationFrame(()=>app.classList.add('visible'));
+  } catch(err) {
+    console.error('Vitrina Digital:', err);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('error').style.display='flex';
+  }
+}
+init();
+</script>
+</body>
+</html>
